@@ -1,0 +1,1 @@
+# Script para entrenar todos los modelos desde consola
