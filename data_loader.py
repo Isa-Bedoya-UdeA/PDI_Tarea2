@@ -20,8 +20,8 @@ from collections import Counter
 
 DATASET_PATH = "data"
 ROBOFLOW_API_KEY = "xNGFWu6CtqfW7sGfMab0"
-ROBOFLOW_WORKSPACE = "roasted-coffee-bean-defect-detectionandy"
-ROBOFLOW_PROJECT = "coffee-bean-defect"
+ROBOFLOW_WORKSPACE = "yzu"  # ACTUALIZADO
+ROBOFLOW_PROJECT = "good-bad-bean"  # ACTUALIZADO
 ROBOFLOW_VERSION = 1
 
 
@@ -32,12 +32,6 @@ ROBOFLOW_VERSION = 1
 def download_dataset_from_roboflow(destination="data"):
     """
     Descarga el dataset desde Roboflow usando la API.
-    
-    Args:
-        destination (str): Carpeta donde se descargará el dataset
-    
-    Returns:
-        str: Ruta del dataset descargado
     """
     try:
         from roboflow import Roboflow
@@ -78,24 +72,6 @@ def download_dataset_from_roboflow(destination="data"):
 def verify_dataset_structure(dataset_path=DATASET_PATH):
     """
     Verifica que la estructura del dataset sea correcta.
-    
-    Estructura esperada:
-    data/
-        ├── train/
-        │   ├── _classes.csv
-        │   └── *.jpg
-        ├── valid/
-        │   ├── _classes.csv
-        │   └── *.jpg
-        └── test/
-            ├── _classes.csv
-            └── *.jpg
-    
-    Args:
-        dataset_path (str): Ruta base del dataset
-    
-    Returns:
-        dict: Estado de cada split (train/valid/test)
     """
     print("\n" + "=" * 60)
     print("VERIFICANDO ESTRUCTURA DEL DATASET")
@@ -132,19 +108,13 @@ def verify_dataset_structure(dataset_path=DATASET_PATH):
 
 
 # ============================================================================
-# LECTURA DE ARCHIVOS _classes.csv
+# LECTURA DE ARCHIVOS _classes.csv (MODIFICADO)
 # ============================================================================
 
 def load_classes_csv(split='train', dataset_path=DATASET_PATH):
     """
-    Lee el archivo _classes.csv de un split específico.
-    
-    Args:
-        split (str): 'train', 'valid' o 'test'
-        dataset_path (str): Ruta base del dataset
-    
-    Returns:
-        pd.DataFrame: DataFrame con columnas ['filename', 'class']
+    Lee el archivo _classes.csv adaptándose al formato one-hot (multiclass).
+    Convierte las columnas binarias en una única columna 'class'.
     """
     csv_path = os.path.join(dataset_path, split, '_classes.csv')
     
@@ -152,17 +122,29 @@ def load_classes_csv(split='train', dataset_path=DATASET_PATH):
         print(f"ERROR: No se encontró {csv_path}")
         return None
     
-    # Leer CSV (puede tener o no encabezado)
     try:
-        df = pd.read_csv(csv_path, header=0)
-        # Renombrar columnas si es necesario
-        if df.shape[1] >= 2:
-            df.columns = ['filename', 'class'] + list(df.columns[2:])
-            df = df[['filename', 'class']]  # Solo las dos primeras columnas
-    except:
-        df = pd.read_csv(csv_path, header=None)
-        df.columns = ['filename', 'class']
-    
+        # Cargar el CSV
+        df = pd.read_csv(csv_path)
+        
+        # Eliminar espacios extraños en los nombres de las columnas
+        df.columns = [col.strip() for col in df.columns]
+        
+        # Detectar columnas de clases (todas excepto 'filename')
+        class_columns = [col for col in df.columns if col != 'filename']
+        
+        if len(class_columns) > 0:
+            # Encontrar el nombre de la columna donde el valor es máximo (el '1')
+            df['class'] = df[class_columns].idxmax(axis=1)
+            # Mantener solo las columnas necesarias para el código original
+            df = df[['filename', 'class']]
+        else:
+            # Backup por si el dataset viene en el formato clásico antiguo
+            df.columns = ['filename', 'class']
+            
+    except Exception as e:
+        print(f"Error procesando el CSV de {split}: {e}")
+        return None
+        
     return df
 
 
@@ -173,9 +155,6 @@ def load_classes_csv(split='train', dataset_path=DATASET_PATH):
 def get_dataset_stats(dataset_path=DATASET_PATH):
     """
     Obtiene estadísticas completas del dataset.
-    
-    Returns:
-        dict: Diccionario con estadísticas de cada split y totales
     """
     print("\n" + "=" * 60)
     print("ESTADÍSTICAS DEL DATASET")
@@ -233,14 +212,6 @@ def get_dataset_stats(dataset_path=DATASET_PATH):
 def analyze_image_dimensions(split='train', dataset_path=DATASET_PATH, max_samples=100):
     """
     Analiza las dimensiones de las imágenes en un split.
-    
-    Args:
-        split (str): 'train', 'valid' o 'test'
-        dataset_path (str): Ruta base del dataset
-        max_samples (int): Máximo número de imágenes a analizar
-    
-    Returns:
-        dict: Estadísticas de dimensiones
     """
     print(f"\nAnalizando dimensiones de imágenes en {split}...")
     
@@ -258,6 +229,9 @@ def analyze_image_dimensions(split='train', dataset_path=DATASET_PATH, max_sampl
             widths.append(w)
             heights.append(h)
     
+    if not widths:
+        return None
+        
     dimensions = {
         'min_width': min(widths),
         'max_width': max(widths),
@@ -282,25 +256,22 @@ def analyze_image_dimensions(split='train', dataset_path=DATASET_PATH, max_sampl
 def visualize_samples(split='train', dataset_path=DATASET_PATH, num_samples=9, seed=42):
     """
     Muestra un grid de imágenes aleatorias del dataset.
-    
-    Args:
-        split (str): 'train', 'valid' o 'test'
-        dataset_path (str): Ruta base del dataset
-        num_samples (int): Número de imágenes a mostrar (debe ser cuadrado perfecto)
-        seed (int): Semilla para reproducibilidad
     """
     np.random.seed(seed)
     
     df = load_classes_csv(split, dataset_path)
-    if df is None:
+    if df is None or len(df) == 0:
         return
     
-    # Seleccionar muestras aleatorias
     samples = df.sample(n=min(num_samples, len(df)))
     
-    # Calcular grid
-    grid_size = int(np.sqrt(num_samples))
+    grid_size = int(np.ceil(np.sqrt(num_samples)))
     fig, axes = plt.subplots(grid_size, grid_size, figsize=(12, 12))
+    
+    # Manejar caso de grid 1x1
+    if grid_size == 1:
+        axes = np.array([[axes]])
+        
     fig.suptitle(f'Muestras del Dataset - {split.upper()}', fontsize=16, fontweight='bold')
     
     for idx, (_, row) in enumerate(samples.iterrows()):
@@ -310,16 +281,15 @@ def visualize_samples(split='train', dataset_path=DATASET_PATH, num_samples=9, s
         img_path = os.path.join(dataset_path, split, row['filename'])
         img = cv2.imread(img_path)
         
+        ax = axes[idx // grid_size, idx % grid_size]
+        
         if img is not None:
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            
-            ax = axes[idx // grid_size, idx % grid_size]
             ax.imshow(img_rgb)
             ax.set_title(f"Clase: {row['class']}", fontsize=10)
-            ax.axis('off')
+        ax.axis('off')
     
-    # Ocultar ejes vacíos
-    for idx in range(len(samples), num_samples):
+    for idx in range(len(samples), grid_size * grid_size):
         axes[idx // grid_size, idx % grid_size].axis('off')
     
     plt.tight_layout()
@@ -332,8 +302,7 @@ def visualize_samples(split='train', dataset_path=DATASET_PATH, num_samples=9, s
 
 def plot_class_distribution(dataset_path=DATASET_PATH):
     """
-    Genera gráficos de barras mostrando la distribución de clases
-    en cada split del dataset.
+    Genera gráficos de barras mostrando la distribución de clases.
     """
     splits = ['train', 'valid', 'test']
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
@@ -341,7 +310,7 @@ def plot_class_distribution(dataset_path=DATASET_PATH):
     
     for idx, split in enumerate(splits):
         df = load_classes_csv(split, dataset_path)
-        if df is None:
+        if df is None or len(df) == 0:
             continue
         
         class_counts = df['class'].value_counts().sort_index()
@@ -353,9 +322,8 @@ def plot_class_distribution(dataset_path=DATASET_PATH):
         ax.set_ylabel('Cantidad de Imágenes')
         ax.grid(axis='y', alpha=0.3)
         
-        # Agregar valores encima de las barras
         for i, v in enumerate(class_counts.values):
-            ax.text(i, v + 5, str(v), ha='center', fontweight='bold')
+            ax.text(i, v + (v*0.02), str(v), ha='center', fontweight='bold')
     
     plt.tight_layout()
     plt.show()
@@ -366,31 +334,14 @@ def plot_class_distribution(dataset_path=DATASET_PATH):
 # ============================================================================
 
 def explore_full_dataset(dataset_path=DATASET_PATH, visualize=True):
-    """
-    Ejecuta exploración completa del dataset.
-    
-    Args:
-        dataset_path (str): Ruta del dataset
-        visualize (bool): Si True, muestra gráficos
-    
-    Returns:
-        dict: Diccionario con todas las estadísticas
-    """
-    # Verificar estructura
     structure = verify_dataset_structure(dataset_path)
-    
-    # Obtener estadísticas
     stats = get_dataset_stats(dataset_path)
     
-    # Analizar dimensiones
     dims = analyze_image_dimensions('train', dataset_path)
     stats['dimensions'] = dims
     
     if visualize:
-        # Visualizar muestras
         visualize_samples('train', dataset_path, num_samples=9)
-        
-        # Gráfico de distribución
         plot_class_distribution(dataset_path)
     
     return stats
