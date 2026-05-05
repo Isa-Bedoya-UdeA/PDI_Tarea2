@@ -9,6 +9,11 @@
 ## Requerimientos
 
 * CustomTkinter: `pip3 install customtkinter`
+* Cv2: `pip install opencv-python`
+* Pandas: `pip install pandas`
+* Numpy: `pip install numpy`
+* Matplotlib: `pip install matplotlib`
+* Roboflow: `pip install roboflow`
 
 ## Flujo de trabajo
 
