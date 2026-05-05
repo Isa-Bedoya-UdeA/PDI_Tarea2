@@ -437,11 +437,6 @@ def preprocess_dataset_split(split='train',
     
     return len(images)
 
-
-# ============================================================================
-# EJEMPLO DE USO
-# ============================================================================
-
 if __name__ == "__main__":
     # Cargar imagen de ejemplo
     test_image = cv2.imread("data/train/-003_png.rf.f3ba0c67474f7343f5348d72b97d99ea.jpg")

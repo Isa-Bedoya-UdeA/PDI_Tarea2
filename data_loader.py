@@ -395,14 +395,8 @@ def explore_full_dataset(dataset_path=DATASET_PATH, visualize=True):
     
     return stats
 
-
-# ============================================================================
-# EJEMPLO DE USO
-# ============================================================================
-
 if __name__ == "__main__":
-    # Opción 1: Descargar dataset (solo la primera vez)
     download_dataset_from_roboflow()
-    
-    # Opción 2: Explorar dataset ya descargado
-    #stats = explore_full_dataset(DATASET_PATH, visualize=True)
+
+    if os.path.exists(DATASET_PATH):
+        stats = explore_full_dataset(DATASET_PATH, visualize=True)
