@@ -19,6 +19,8 @@ from collections import Counter
 # ============================================================================
 
 DATASET_PATH = "data"
+os.makedirs(DATASET_PATH, exist_ok=True)
+
 ROBOFLOW_API_KEY = "xNGFWu6CtqfW7sGfMab0"
 ROBOFLOW_WORKSPACE = "yzu"  # ACTUALIZADO
 ROBOFLOW_PROJECT = "good-bad-bean"  # ACTUALIZADO

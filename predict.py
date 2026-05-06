@@ -103,9 +103,20 @@ def predict_image(image_path, descriptor='hog', model_type='nn'):
     if descriptor == 'hog':
         processed = preprocess_for_hog(image)
         features = extract_hog_features(processed)
-    else:  # lbp
+    elif descriptor == 'lbp':
         processed = preprocess_for_lbp(image)
         features = extract_lbp_features(processed)
+    elif descriptor == 'hog+lbp':
+        f_hog = extract_hog_features(preprocess_for_hog(image))
+        f_lbp = extract_lbp_features(preprocess_for_lbp(image))
+        features = np.concatenate([f_hog, f_lbp])
+    elif descriptor == 'lbp+hog':
+        f_hog = extract_hog_features(preprocess_for_hog(image))
+        f_lbp = extract_lbp_features(preprocess_for_lbp(image))
+        features = np.concatenate([f_lbp, f_hog])
+    else:
+        print(f"ERROR: Descriptor {descriptor} desconocido")
+        return None
     
     # Escalar características
     features_scaled = scaler.transform([features])
@@ -153,9 +164,19 @@ def predict_image_with_preloaded_model(image, model, scaler, descriptor='hog'):
     if descriptor == 'hog':
         processed = preprocess_for_hog(image)
         features = extract_hog_features(processed)
-    else:
+    elif descriptor == 'lbp':
         processed = preprocess_for_lbp(image)
         features = extract_lbp_features(processed)
+    elif descriptor == 'hog+lbp':
+        f_hog = extract_hog_features(preprocess_for_hog(image))
+        f_lbp = extract_lbp_features(preprocess_for_lbp(image))
+        features = np.concatenate([f_hog, f_lbp])
+    elif descriptor == 'lbp+hog':
+        f_hog = extract_hog_features(preprocess_for_hog(image))
+        f_lbp = extract_lbp_features(preprocess_for_lbp(image))
+        features = np.concatenate([f_lbp, f_hog])
+    else:
+        return None
     
     # Escalar
     features_scaled = scaler.transform([features])

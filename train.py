@@ -264,7 +264,6 @@ def plot_confusion_matrix(cm, class_names=['Bad Bean (0)', 'Good Bean (1)'], tit
     plt.ylabel('Etiqueta Verdadera', fontweight='bold')
     plt.xlabel('Etiqueta Predicha', fontweight='bold')
     plt.tight_layout()
-    plt.show()
 
 
 def plot_roc_curve(y_true, y_proba, title='Curva ROC'):
@@ -281,7 +280,6 @@ def plot_roc_curve(y_true, y_proba, title='Curva ROC'):
     plt.legend()
     plt.grid(alpha=0.3)
     plt.tight_layout()
-    plt.show()
 
 
 # ============================================================================
@@ -318,7 +316,7 @@ def evaluate_model(model, X_test, y_test, split_name="TEST", show_plots=True):
 # PIPELINE COMPLETO DE ENTRENAMIENTO
 # ============================================================================
 
-def train_complete_pipeline(descriptor='hog', use_smote=USE_SMOTE, use_class_weight=USE_CLASS_WEIGHT):
+def train_complete_pipeline(descriptor='hog', use_smote=USE_SMOTE, use_class_weight=USE_CLASS_WEIGHT, show_plots=True, block_plots=True):
     """
     Pipeline completo: extracción, entrenamiento y evaluación.
     
@@ -387,18 +385,22 @@ def train_complete_pipeline(descriptor='hog', use_smote=USE_SMOTE, use_class_wei
     print("\n" + "🔹"*40)
     print("RED NEURONAL - EVALUACIÓN")
     print("🔹"*40)
-    nn_metrics = evaluate_model(nn_model, X_test_scaled, y_test, "TEST", show_plots=True)
+    nn_metrics = evaluate_model(nn_model, X_test_scaled, y_test, "TEST", show_plots=show_plots)
     
     print("\n" + "🔸"*40)
     print("SVM - EVALUACIÓN")
     print("🔸"*40)
-    svm_metrics = evaluate_model(svm_model, X_test_scaled, y_test, "TEST", show_plots=True)
+    svm_metrics = evaluate_model(svm_model, X_test_scaled, y_test, "TEST", show_plots=show_plots)
     
     # Comparación
-    compare_models_results({
-        f'{descriptor.upper()}-NN': nn_metrics,
-        f'{descriptor.upper()}-SVM': svm_metrics
-    })
+    if show_plots:
+        compare_models_results({
+            f'{descriptor.upper()}-NN': nn_metrics,
+            f'{descriptor.upper()}-SVM': svm_metrics
+        })
+        
+        if block_plots:
+            plt.show()
     
     return {
         'models': {'nn': nn_model, 'svm': svm_model, 'scaler': scaler},
@@ -462,7 +464,6 @@ def plot_models_comparison(results_dict):
     ax.grid(axis='y', alpha=0.3)
     
     plt.tight_layout()
-    plt.show()
 
 if __name__ == "__main__":
     # Entrenar con HOG

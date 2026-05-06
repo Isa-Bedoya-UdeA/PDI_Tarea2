@@ -236,13 +236,6 @@ def extract_features_from_dataset(split='train',
     labels_list = []
     filenames_list = []
     
-    if descriptor == 'hog':
-        extract_fn = extract_hog_features
-        preprocess_fn = preprocess_for_hog
-    else:
-        extract_fn = extract_lbp_features
-        preprocess_fn = preprocess_for_lbp
-    
     print(f"\nExtrayendo características {descriptor.upper()} de {split}...")
     
     for _, row in tqdm(df.iterrows(), total=len(df), desc=f"Procesando {split}"):
@@ -252,10 +245,26 @@ def extract_features_from_dataset(split='train',
         if image is None:
             continue
         
-        if not preprocessed:
-            image = preprocess_fn(image)
-        
-        features = extract_fn(image)
+        if descriptor == 'hog':
+            img_prep = preprocess_for_hog(image) if not preprocessed else image
+            features = extract_hog_features(img_prep)
+        elif descriptor == 'lbp':
+            img_prep = preprocess_for_lbp(image) if not preprocessed else image
+            features = extract_lbp_features(img_prep)
+        elif descriptor == 'hog+lbp':
+            img_hog = preprocess_for_hog(image) if not preprocessed else image
+            img_lbp = preprocess_for_lbp(image) if not preprocessed else image
+            f_hog = extract_hog_features(img_hog)
+            f_lbp = extract_lbp_features(img_lbp)
+            features = np.concatenate([f_hog, f_lbp])
+        elif descriptor == 'lbp+hog':
+            img_hog = preprocess_for_hog(image) if not preprocessed else image
+            img_lbp = preprocess_for_lbp(image) if not preprocessed else image
+            f_hog = extract_hog_features(img_hog)
+            f_lbp = extract_lbp_features(img_lbp)
+            features = np.concatenate([f_lbp, f_hog])
+        else:
+            raise ValueError(f"Descriptor desconocido: {descriptor}")
         
         # Convertir clase de string a numérico
         numeric_label = map_class_to_numeric(row['class'])
