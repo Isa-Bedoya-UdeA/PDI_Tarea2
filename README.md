@@ -14,6 +14,9 @@
 * Numpy: `pip install numpy`
 * Matplotlib: `pip install matplotlib`
 * Roboflow: `pip install roboflow`
+* Scikit: `pip install scikit-image`
+* Imblearn: `pip install imbalanced-learn`
+* Seaborn: `pip install seaborn`
 
 ## Flujo de trabajo
 

@@ -235,7 +235,6 @@ def preprocess_dataset_split(split='train',
     return len(images)
 
 if __name__ == "__main__":
-    # MODIFICACIÓN: Encontrar dinámicamente la primera imagen de la carpeta train
     test_images = glob.glob("data/train/*.jpg")
     
     if test_images:
