@@ -35,5 +35,5 @@
 
 Estos pasos son solo de lo implementado hasta el momento.
 
-1. Ejecuta `data_loader.py` para ver la exploración del dataset y descargarlo.
-2. Ejecuta `preprocessing.py` para ver los pasos de preprocesado.
+1. Ejecuta el comando `py main.py` para ver la ayuda.
+2. Ejecuta el comando `py main.py argumento` para ejecutar una acción (train con hog, train con lbp, predict una imagen, predict toda la carpeta test, exporar dataset, listar modelos, o lanzar gui)
